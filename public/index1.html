@@ -306,7 +306,7 @@
         // Function to fetch product details along with supplier information
         async function fetchProductDetails(productName) {
     try {
-        let response = await fetch("http://localhost:5000/api/products");
+        let response = await fetch("https://erp-system-3k45.onrender.com/api/products");
         let data = await response.json();
 
         if (!data.length) {
@@ -347,7 +347,7 @@
 // ✅ Function to fetch supplier details using supplier ID
 async function fetchSupplierById(supplierId) {
     try {
-        let response = await fetch(`http://localhost:5000/api/suppliers/${supplierId}`);
+        let response = await fetch(`https://erp-system-3k45.onrender.com/api/suppliers/${supplierId}`);
         let supplier = await response.json();
 
         console.log("Fetched Supplier Data:", supplier); // Debugging
@@ -367,7 +367,7 @@ async function fetchSupplierById(supplierId) {
             if (!supplierName) return "❓ Please specify a supplier name.";
     
             try {
-                let response = await fetch(`http://localhost:5000/api/suppliers?name=${encodeURIComponent(supplierName)}`);
+                let response = await fetch(`https://erp-system-3k45.onrender.com/api/suppliers?name=${encodeURIComponent(supplierName)}`);
                 let data = await response.json();
     
                 if (data.length > 0) {
@@ -385,7 +385,7 @@ async function fetchSupplierById(supplierId) {
     
         async function fetchSupplierById(supplierId) {
             try {
-                let response = await fetch(`http://localhost:5000/api/suppliers/${supplierId}`);
+                let response = await fetch(`https://erp-system-3k45.onrender.com/api/suppliers/${supplierId}`);
                 let supplier = await response.json();
                 return `${supplier.name} (📍 ${supplier.location})`;
             } catch (error) {
