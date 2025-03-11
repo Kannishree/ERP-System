@@ -60,6 +60,7 @@
         .content {
             margin-left: 260px;
             padding: 20px;
+            min-height: 100vh;
         }
 
         /* Profile Section */
@@ -448,16 +449,17 @@ function displayMessage(sender, message) {
         function checkLogin() {
             let user = localStorage.getItem("user");
             if (user) {
-                document.getElementById("dashboard-content").style.display = "block";
-                document.getElementById("sidebar").style.display = "block";
-                document.getElementById("navbar").style.display = "block";
-    
-                let userData = JSON.parse(user);
-                document.getElementById("username").innerText = userData.username || "User";
+            document.getElementById("dashboard-content").style.display = "block";
+            document.getElementById("sidebar").style.display = "block";
+            document.getElementById("navbar").style.display = "block";
+
+            let userData = JSON.parse(user);
+            document.getElementById("username").innerText = userData.username || "User";
             } else {
-                window.location.href = "login.html";
-            }
+            window.location.href = "login.html";
         }
+    }
+
     
         function logout() {
             localStorage.removeItem("user");
