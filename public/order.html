@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management</title>
+    <script defer src="script.js"></script>
+    <style>
+       /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #eef2f7;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Main Container */
+        .container {
+            background: #ffffff;
+            padding: 25px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        /* Headings */
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: 600;
+            text-align: left;
+            color: #34495e;
+        }
+
+        input, select, button {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        input, select {
+            background-color: #f8f9fa;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Button Styling */
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #d6e4f0;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+
+            table, th, td {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Place an Order</h1>
+
+        <form id="orderForm">
+            <label for="customerName">Customer Name:</label>
+            <input type="text" id="customerName" required>
+
+            <label for="productID">Product:</label>
+            <select id="productID" required>
+                <option value="">Loading products...</option>
+            </select>
+
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" min="1" required>
+
+            <button type="submit">Place Order</button>
+        </form>
+
+        <h2>Order List</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    
+                </tr>
+            </thead>
+            <tbody id="orderTable">
+                <!-- Orders will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const productDropdown = document.getElementById("productID");
+            const orderForm = document.getElementById("orderForm");
+            const orderTable = document.getElementById("orderTable");
+
+            // ✅ Load products
+            async function loadProducts() {
+                try {
+                    const response = await fetch("http://localhost:5000/api/products");
+                    if (!response.ok) throw new Error("Failed to fetch products");
+
+                    const products = await response.json();
+                    productDropdown.innerHTML = '<option value="">Select a product</option>'; 
+
+                    products.forEach(product => {
+                        const option = document.createElement("option");
+                        option.value = product._id;
+                        option.textContent = `${product.name} (ID: ${product._id})`;
+                        productDropdown.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error("Error fetching products:", error);
+                    productDropdown.innerHTML = '<option value="">Failed to load products</option>';
+                }
+            }
+
+            // ✅ Load orders (fix: replace undefined orderID with 1, 2, 3)
+            async function loadOrders() {
+                try {
+                    const response = await fetch("http://localhost:5000/api/orders/all");
+                    if (!response.ok) throw new Error("Failed to fetch orders");
+
+                    const orders = await response.json();
+                    orderTable.innerHTML = "";
+
+                    orders.forEach((order, index) => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${order.orderID || index + 1}</td>  <!-- Replace undefined with 1, 2, 3 -->
+                            <td>${order.customerName}</td>
+                            <td>${order.productID?.name || "Unknown Product"}</td>  <!-- Fix for missing product name -->
+                            <td>${order.quantity}</td>
+                          
+                        `;
+                        orderTable.appendChild(row);
+                    });
+                } catch (error) {
+                    console.error("Error fetching orders:", error);
+                }
+            }
+
+            // ✅ Submit order
+            orderForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                const customerName = document.getElementById("customerName").value.trim();
+                const productID = document.getElementById("productID").value;
+                const quantity = document.getElementById("quantity").value;
+
+                if (!customerName || !productID || !quantity) {
+                    alert("Please fill in all fields.");
+                    return;
+                }
+
+                try {
+                    const orderData = { customerName, productID, quantity: parseInt(quantity) };
+
+                    const orderResponse = await fetch("http://localhost:5000/api/orders/place", {  
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(orderData),
+                    });
+
+                    if (!orderResponse.ok) throw new Error("Failed to place order");
+
+                    alert("Order placed successfully!");
+                    orderForm.reset();  
+                    loadOrders();  
+                } catch (error) {
+                    alert("Error: " + error.message);
+                    console.error("Order Error:", error);
+                }
+            });
+
+            // ✅ Load initial data
+            loadProducts();
+            loadOrders();
+        });
+    </script>
+</body>
+</html>

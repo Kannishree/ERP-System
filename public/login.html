@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SmartERP</title>
+    <style>
+        /* Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h3 {
+            margin-bottom: 15px;
+            color: black;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.1);
+            color: black;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        input:focus {
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1565c0;
+            transform: translateY(-2px);
+        }
+
+        .switch-link {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .switch-link a {
+            color: black;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                max-width: 90%;
+            }
+
+            input, button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h3>Login to SmartERP</h3>
+        <input type="email" id="login-email" placeholder="Email" required>
+        <div class="password-container">
+            <input type="password" id="login-password" placeholder="Password" required>
+            <span class="toggle-password" onclick="togglePassword()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 4C4 4 1 10 1 10s3 6 9 6 9-6 9-6-3-6-9-6z" stroke="black" stroke-width="1.5"/>
+                    <circle cx="10" cy="10" r="3" stroke="black" stroke-width="1.5"/>
+                </svg>
+            </span>
+        </div>
+        <button onclick="login()">Login</button>
+        <p class="error-message" id="error-msg"></p>
+        <div class="switch-link">
+            <p>Don't have an account? <a href="register.html">Register here</a></p>
+        </div>
+    </div>
+
+    <script>
+       const apiUrl = 'http://localhost:5000/api/auth/login';
+
+async function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    const errorMsg = document.getElementById('error-msg');
+
+    // Clear previous error message
+    errorMsg.textContent = "";
+
+    // Basic validation
+    if (!email || !password) {
+        errorMsg.textContent = "Please enter both email and password.";
+        return;
+    }
+
+    // Check for valid email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorMsg.textContent = "Please enter a valid email address.";
+        return;
+    }
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem('user', JSON.stringify(result.user)); // Store user session
+            alert('Login successful!');
+            window.location.href = 'index1.html'; // Redirect to dashboard
+        } else {
+            errorMsg.textContent = result.message || "Invalid email or password.";
+        }
+    } catch (error) {
+        errorMsg.textContent = "Unable to connect to the server. Please try again.";
+    }
+}
+
+function togglePassword() {
+    const passwordField = document.getElementById('login-password');
+    const toggleIcon = document.querySelector('.toggle-password svg path');
+
+    const isPasswordVisible = passwordField.type === "text";
+    passwordField.type = isPasswordVisible ? "password" : "text";
+
+    // Change icon color on toggle
+    toggleIcon.setAttribute("stroke", isPasswordVisible ? "black" : "#ff6b6b");
+}
+
+    </script>
+</body>
+
+</html>

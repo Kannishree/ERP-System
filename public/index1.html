@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartERP - Dashboard</title>
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f4f7fe;
+        }
+
+        /* Hide dashboard until login */
+        #dashboard-content {
+            display: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #0f172a;
+            position: fixed;
+            top: 0;
+            left: 0;
+            color: white;
+            padding-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            color: #b0b3c0;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* Navbar */
+        .navbar {
+            margin-left: 260px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+        }
+
+        .content {
+            margin-left: 260px;
+            padding: 20px;
+        }
+
+        /* Profile Section */
+        .profile {
+            font-weight: bold;
+        }
+
+        /* Card Styling */
+        .card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Fix blue underline issue */
+        .card-link {
+            text-decoration: none !important;
+        }
+
+        .card-link h5,
+        .card-link p {
+            text-decoration: none !important;
+            color: white !important;
+        }
+        /* Chatbot */
+        .chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chatbot-header {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .chatbot-messages {
+            height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chatbot-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .chatbot-input button {
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .chatbot-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .chatbot-message.user {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chatbot-message.bot {
+            background: #f1f1f1;
+            color: black;
+            align-self: flex-start;
+        }
+
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+            }
+
+            .navbar {
+                margin-left: 80px;
+            }
+
+            .content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <h4 class="text-center">SmartERP</h4>
+        <a href="index1.html"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+        <a href="product.html"><i class="fas fa-box"></i> <span>Products</span></a>
+        <a href="visualization.html"><i class="fas fa-chart-bar"></i> <span>Visualization</span></a>
+        <a href="order.html"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a>
+        <a href="supplier.html"><i class="fas fa-truck"></i> <span>Suppliers</span></a>
+        <a href="settings.html"><i class="fas fa-cog"></i> <span>Settings</span></a>
+        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="container-fluid">
+            <h4>Dashboard</h4>
+            <div class="profile" id="username">User</div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="content" id="dashboard-content">
+        <h2>Welcome to SmartERP</h2>
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <a href="visualization.html" class="card-link">
+                    <div class="card text-center p-4 bg-primary text-white">
+                        <h5>📊 Stock Visualization</h5>
+                        <p>View analytics and stock reports.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="product.html" class="card-link">
+                    <div class="card text-center p-4 bg-success text-white">
+                        <h5>📦 Products</h5>
+                        <p>Manage and track products efficiently.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="order.html" class="card-link">
+                    <div class="card text-center p-4 bg-warning text-white">
+                        <h5>🛒 Orders</h5>
+                        <p>Manage customer orders.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mt-4">
+                <a href="supplier.html" class="card-link">
+                    <div class="card text-center p-4 bg-info text-white">
+                        <h5>🚚 Suppliers</h5>
+                        <p>Manage supplier details efficiently.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <button class="chatbot-button" onclick="toggleChatbot()">💬</button>
+
+    <div class="chatbot-container" id="chatbot">
+        <div class="chatbot-header">Chatbot</div>
+        <div class="chatbot-messages" id="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        async function getChatbotResponse(message) {
+            message = message.toLowerCase().trim();
+            
+            // Check for general product inquiries
+            if (message.includes("what are the products available") || message.includes("available products")) {
+                return await fetchProductDetails(""); // Fetch all products
+            }
+            // Identify product inquiries
+            if (message.includes("product details") || message.includes("tell me about")) {
+                let productName = message.replace("product details", "").replace("tell me about", "").trim();
+                return await fetchProductDetails(productName);
+            }
+    
+            // Identify supplier inquiries
+            if (message.includes("supplier details") || message.includes("who supplies")) {
+                let supplierName = message.replace("supplier details", "").replace("who supplies", "").trim();
+                return await fetchSupplierDetails(supplierName);
+            }
+    
+            // Handle other queries
+            if (message.includes("order")) return "📦 Check the 'Orders' section to view customer orders.";
+            if (message.includes("stock")) return "📊 Stock analytics are available in the 'Visualization' section.";
+            if (message.includes("dashboard")) return "📌 You are currently on the dashboard. Use the sidebar to navigate.";
+            if (message.includes("logout")) return "🔒 Click on 'Logout' in the sidebar to log out.";
+            if (message.includes("help")) return "ℹ️ You can ask about products, suppliers, orders, stock, or how to log out.";
+            if (message.includes("hello") || message.includes("hi")) return "👋 Hello! How can I assist you today?";
+            if (message.includes("thank you") || message.includes("thanks")) return "😊 You're welcome! Let me know if you need more help.";
+    
+            return "🤖 I'm still learning! Try asking about a specific product or supplier.";
+        }
+    
+        // Function to fetch product details along with supplier information
+        async function fetchProductDetails(productName) {
+    try {
+        let response = await fetch("http://localhost:5000/api/products");
+        let data = await response.json();
+
+        if (!data.length) {
+            return "⚠️ No products found in the database.";
+        }
+
+        if (productName) {
+            let product = data.find(p => p.name.toLowerCase() === productName.toLowerCase());
+
+            if (!product) {
+                return `⚠️ Product '${productName}' not found.`;
+            }
+
+            console.log("Fetched Product Data:", product); // Debugging
+
+            // Ensure supplier ID is available
+            let supplierInfo = "❌ Not available";
+            if (product.supplier) {
+                supplierInfo = await fetchSupplierById(product.supplier);
+            }
+
+            return `🛒 **Product:** ${product.name}
+💰 **Price:** $${product.price}
+📦 **Stock:** ${product.stock} units
+🏢 **Supplier:** ${supplierInfo}`;
+        }
+
+        return data.map(product => `🛒 **Product:** ${product.name}
+💰 **Price:** $${product.price}
+📦 **Stock:** ${product.stock} units`).join("\n\n");
+
+    } catch (error) {
+        console.error("Error fetching product details:", error);
+        return "❌ Error fetching product details. Please try again later.";
+    }
+}
+
+// ✅ Function to fetch supplier details using supplier ID
+async function fetchSupplierById(supplierId) {
+    try {
+        let response = await fetch(`http://localhost:5000/api/suppliers/${supplierId}`);
+        let supplier = await response.json();
+
+        console.log("Fetched Supplier Data:", supplier); // Debugging
+
+        if (!supplier || !supplier.name) {
+            return "❌ Supplier details not found";
+        }
+
+        return `${supplier.name} (📍 ${supplier.address}, 📞 ${supplier.contact}, ✉️ ${supplier.email})`;
+    } catch (error) {
+        console.error("Error fetching supplier details:", error);
+        return "❌ Supplier details unavailable";
+    }
+}
+    
+        async function fetchSupplierDetails(supplierName) {
+            if (!supplierName) return "❓ Please specify a supplier name.";
+    
+            try {
+                let response = await fetch(`http://localhost:5000/api/suppliers?name=${encodeURIComponent(supplierName)}`);
+                let data = await response.json();
+    
+                if (data.length > 0) {
+                    let supplier = data[0]; // Assume the first result is the correct one
+                    return `🏢 **Supplier:** ${supplier.name}
+    📍 **Location:** ${supplier.location}
+    📞 **Contact:** ${supplier.contact}`;
+                } else {
+                    return "⚠️ Supplier not found. Please check the name and try again.";
+                }
+            } catch (error) {
+                return "❌ Error fetching supplier details. Please try again later.";
+            }
+        }
+    
+        async function fetchSupplierById(supplierId) {
+            try {
+                let response = await fetch(`http://localhost:5000/api/suppliers/${supplierId}`);
+                let supplier = await response.json();
+                return `${supplier.name} (📍 ${supplier.location})`;
+            } catch (error) {
+                return "Unknown Supplier";
+            }
+        }
+    
+        async function sendMessage() {
+            let inputField = document.getElementById("chatbot-input");
+            let message = inputField.value.trim();
+            if (message === "") return;
+    
+            let messagesDiv = document.getElementById("chatbot-messages");
+    
+            // User message
+            let userMessage = document.createElement("div");
+            userMessage.classList.add("chatbot-message", "user");
+            userMessage.innerText = message;
+            messagesDiv.appendChild(userMessage);
+    
+            // Get bot response
+            let response = await getChatbotResponse(message);
+    
+            // Bot response
+            let botMessage = document.createElement("div");
+            botMessage.classList.add("chatbot-message", "bot");
+            botMessage.innerText = response;
+            messagesDiv.appendChild(botMessage);
+    
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            inputField.value = "";
+        }
+    
+        function toggleChatbot() {
+            let chatbot = document.getElementById("chatbot");
+            chatbot.style.display = chatbot.style.display === "flex" ? "none" : "flex";
+        }
+    
+        function checkLogin() {
+            let user = localStorage.getItem("user");
+            if (user) {
+                document.getElementById("dashboard-content").style.display = "block";
+                document.getElementById("sidebar").style.display = "block";
+                document.getElementById("navbar").style.display = "block";
+    
+                let userData = JSON.parse(user);
+                document.getElementById("username").innerText = userData.username || "User";
+            } else {
+                window.location.href = "login.html";
+            }
+        }
+    
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "login.html";
+        }
+    
+        checkLogin();
+    </script>
+    
+
+</body>
+
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Management</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .table thead {
+            background-color: #212529;
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: black;
+            border: none;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .btn-edit:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 class="text-center text-primary mb-4">📑 Compliance Management</h2>
+
+        <!-- Compliance Form -->
+        <div class="card">
+            <h4>Add Compliance Record</h4>
+            <form id="complianceForm">
+                <div class="mb-3">
+                    <label class="form-label">Transaction ID:</label>
+                    <input type="text" class="form-control" id="transactionId" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount:</label>
+                    <input type="number" class="form-control" id="amount" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tax Rate (%):</label>
+                    <input type="number" class="form-control" id="taxRate" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Remarks:</label>
+                    <input type="text" class="form-control" id="remarks">
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+
+        <!-- Compliance Table -->
+        <div class="mt-4">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Transaction ID</th>
+                        <th>Amount</th>
+                        <th>Tax Rate (%)</th>
+                        <th>Tax Amount</th>
+                        <th>Total Amount</th>
+                        <th>Remarks</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="complianceTableBody">
+                    <!-- Data will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchComplianceRecords();
+        });
+
+        function fetchComplianceRecords() {
+            fetch('/api/compliance')
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.getElementById("complianceTableBody");
+                    tableBody.innerHTML = "";
+
+                    data.forEach((record, index) => {
+                        let row = `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${record.transactionId}</td>
+                                <td>₹${record.amount.toFixed(2)}</td>
+                                <td>${record.taxRate}%</td>
+                                <td>₹${record.taxAmount.toFixed(2)}</td>
+                                <td>₹${record.totalAmount.toFixed(2)}</td>
+                                <td>${record.remarks || "N/A"}</td>
+                                <td>
+                                    <button class="btn btn-edit btn-sm" onclick="editRecord('${record._id}')">Edit</button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteRecord('${record._id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error("Error fetching compliance records:", error));
+        }
+
+        document.getElementById("complianceForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let transactionId = document.getElementById("transactionId").value;
+            let amount = parseFloat(document.getElementById("amount").value);
+            let taxRate = parseFloat(document.getElementById("taxRate").value);
+            let remarks = document.getElementById("remarks").value;
+
+            let taxAmount = (amount * taxRate) / 100;
+            let totalAmount = amount + taxAmount;
+
+            let complianceData = {
+                transactionId,
+                amount,
+                taxRate,
+                taxAmount,
+                totalAmount,
+                remarks
+            };
+
+            fetch('/api/compliance', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(complianceData)
+            })
+            .then(response => response.json())
+            .then(() => {
+                fetchComplianceRecords();
+                document.getElementById("complianceForm").reset();
+            })
+            .catch(error => console.error("Error adding compliance record:", error));
+        });
+
+        function deleteRecord(id) {
+            if (confirm("Are you sure you want to delete this record?")) {
+                fetch(`/api/compliance/${id}`, { method: "DELETE" })
+                    .then(() => fetchComplianceRecords())
+                    .catch(error => console.error("Error deleting record:", error));
+            }
+        }
+    </script>
+
+</body>
+
+</html>

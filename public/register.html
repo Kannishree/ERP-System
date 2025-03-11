@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - SmartERP</title>
+    <style>
+        /* Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h3 {
+            margin-bottom: 15px;
+            color: black;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.1);
+            color: black;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        input:focus {
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #1e88e5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1565c0;
+            transform: translateY(-2px);
+        }
+
+        .switch-link {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .switch-link a {
+            color: black;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                max-width: 90%;
+            }
+
+            input, button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h3>Register to SmartERP</h3>
+        <input type="text" id="register-username" placeholder="Username" required>
+        <input type="email" id="register-email" placeholder="Email" required>
+
+        <div class="password-container">
+            <input type="password" id="register-password" placeholder="Password" required>
+            <span class="toggle-password" onclick="togglePassword('register-password', this)">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 4C4 4 1 10 1 10s3 6 9 6 9-6 9-6-3-6-9-6z" stroke="black" stroke-width="1.5"/>
+                    <circle cx="10" cy="10" r="3" stroke="black" stroke-width="1.5"/>
+                </svg>
+            </span>
+        </div>
+
+        <div class="password-container">
+            <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            <span class="toggle-password" onclick="togglePassword('confirm-password', this)">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 4C4 4 1 10 1 10s3 6 9 6 9-6 9-6-3-6-9-6z" stroke="black" stroke-width="1.5"/>
+                    <circle cx="10" cy="10" r="3" stroke="black" stroke-width="1.5"/>
+                </svg>
+            </span>
+        </div>
+
+        <button onclick="register()">Register</button>
+        <p class="error-message" id="error-msg"></p>
+        <div class="switch-link">
+            <p>Already have an account? <a href="login.html">Login here</a></p>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:5000/api/auth/register';
+
+        async function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+
+            errorMsg.textContent = ""; // Clear previous messages
+
+            if (!username || !email || !password || !confirmPassword) {
+                errorMsg.textContent = "All fields are required!";
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorMsg.textContent = "Passwords do not match!";
+                return;
+            }
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Registration successful!');
+                    window.location.href = 'login.html'; // Redirect to login
+                } else {
+                    errorMsg.textContent = result.message || "Registration failed.";
+                }
+            } catch (error) {
+                errorMsg.textContent = "Server error. Please try again later.";
+            }
+        }
+
+        function togglePassword(inputId, element) {
+            const passwordField = document.getElementById(inputId);
+            const toggleIcon = element.querySelector("svg path");
+
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                toggleIcon.setAttribute("stroke", "#ff6b6b"); // Change color on toggle
+            } else {
+                passwordField.type = "password";
+                toggleIcon.setAttribute("stroke", "black");
+            }
+        }
+    </script>
+</body>
+
+</html>

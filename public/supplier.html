@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #007bff;
+        }
+        .card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        .card h5 {
+            color: #495057;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        table {
+            margin-top: 20px;
+        }
+        thead {
+            background-color: #343a40;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4 text-center">Supplier Management</h2>
+
+        <!-- Add/Edit Supplier Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 id="formTitle">Add Supplier</h5>
+                <form id="supplierForm">
+                    <input type="hidden" id="supplierId"> <!-- For editing -->
+
+                    <div class="mb-3">
+                        <label class="form-label">Name:</label>
+                        <input type="text" id="name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Contact:</label>
+                        <input type="text" id="contact" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email:</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Address:</label>
+                        <input type="text" id="address" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" id="cancelEdit" class="btn btn-secondary d-none">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Supplier List Table -->
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="supplierTableBody">
+                <!-- Supplier rows will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const apiBaseUrl = "http://localhost:5000/api/suppliers"; // Backend API URL
+
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchSuppliers();
+            document.getElementById("supplierForm").addEventListener("submit", saveSupplier);
+            document.getElementById("cancelEdit").addEventListener("click", resetForm);
+        });
+
+        // Fetch and display suppliers
+        function fetchSuppliers() {
+            fetch(apiBaseUrl)
+                .then(response => response.json())
+                .then(suppliers => renderSuppliers(suppliers))
+                .catch(error => console.error("Error fetching suppliers:", error));
+        }
+
+        // Display suppliers in table
+        function renderSuppliers(suppliers) {
+            let supplierTableBody = document.getElementById("supplierTableBody");
+            supplierTableBody.innerHTML = "";
+
+            suppliers.forEach((supplier, index) => {
+                let row = `<tr data-id="${supplier._id}">
+                    <td>${index + 1}</td>
+                    <td>${supplier.name}</td>
+                    <td>${supplier.contact}</td>
+                    <td>${supplier.email}</td>
+                    <td>${supplier.address}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editSupplier('${supplier._id}')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSupplier('${supplier._id}')">Delete</button>
+                    </td>
+                </tr>`;
+                supplierTableBody.innerHTML += row;
+            });
+        }
+
+        // Save or Update Supplier
+        function saveSupplier(event) {
+            event.preventDefault();
+
+            let id = document.getElementById("supplierId").value;
+            let supplierData = {
+                name: document.getElementById("name").value,
+                contact: document.getElementById("contact").value,
+                email: document.getElementById("email").value,
+                address: document.getElementById("address").value
+            };
+
+            if (id) {
+                // Update existing supplier
+                fetch(`${apiBaseUrl}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(supplierData)
+                })
+                .then(response => response.json())
+                .then(() => {
+                    alert("Supplier updated successfully.");
+                    resetForm();
+                    fetchSuppliers();
+                })
+                .catch(error => console.error("Error updating supplier:", error));
+            } else {
+                // Add new supplier
+                fetch(apiBaseUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(supplierData)
+                })
+                .then(response => response.json())
+                .then(() => {
+                    alert("Supplier added successfully.");
+                    resetForm();
+                    fetchSuppliers();
+                })
+                .catch(error => console.error("Error adding supplier:", error));
+            }
+        }
+
+        // Edit Supplier
+        function editSupplier(id) {
+            const row = document.querySelector(`[data-id='${id}']`);
+            if (!row) {
+                console.error("Supplier row not found!");
+                return;
+            }
+
+            const columns = row.querySelectorAll("td");
+            const name = columns[1].textContent;
+            const contact = columns[2].textContent;
+            const email = columns[3].textContent;
+            const address = columns[4].textContent;
+
+            document.getElementById("supplierId").value = id;
+            document.getElementById("name").value = name;
+            document.getElementById("contact").value = contact;
+            document.getElementById("email").value = email;
+            document.getElementById("address").value = address;
+
+            document.getElementById("formTitle").textContent = "Edit Supplier";
+            document.getElementById("cancelEdit").classList.remove("d-none");
+
+            console.log("Editing Supplier:", { id, name, contact, email, address });
+        }
+
+        // Delete Supplier
+        function deleteSupplier(id) {
+            if (confirm("Are you sure you want to delete this supplier?")) {
+                fetch(`${apiBaseUrl}/${id}`, { method: "DELETE" })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Failed to delete supplier.");
+                        return response.json();
+                    })
+                    .then(() => {
+                        alert("Supplier deleted successfully.");
+                        fetchSuppliers();
+                    })
+                    .catch(error => console.error("Error deleting supplier:", error));
+            }
+        }
+
+        // Reset Form
+        function resetForm() {
+            document.getElementById("supplierForm").reset();
+            document.getElementById("supplierId").value = "";
+            document.getElementById("formTitle").textContent = "Add Supplier";
+            document.getElementById("cancelEdit").classList.add("d-none");
+        }
+    </script>
+</body>
+</html>

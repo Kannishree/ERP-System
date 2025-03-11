@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Management System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      background-color: #1e88e5;
+      color: white;
+      padding: 15px 0;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .container {
+      width: 80%;
+      margin: 20px auto;
+    }
+
+    .form-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container input,
+    .form-container select,
+    .form-container button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .form-container button {
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .form-container button:hover {
+      background-color: #1565c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+
+    .action-buttons button {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .action-buttons .update {
+      background-color: #2196F3;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal.show {
+      display: block;
+    }
+
+    .modal button {
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .modal button:hover {
+      background-color: #1565c0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    Product Management System
+  </div>
+
+  <div class="container">
+    <div class="form-container">
+      <h3>Add New Product</h3>
+      <input type="text" id="name" placeholder="Product Name" required>
+      <input type="number" id="price" placeholder="Product Price" min="0" required>
+      <input type="number" id="stock" placeholder="Product Stock" min="0" required>
+
+      <label for="supplier">Supplier:</label>
+      <select id="supplier">
+        <option value="">Select Supplier</option>
+      </select>
+      <button onclick="openSupplierModal()">+ Add New Supplier</button>
+
+      <button onclick="createProduct()">Add Product</button>
+    </div>
+
+    <h3>Product List</h3>
+    <table id="product-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Supplier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Supplier Modal -->
+  <div id="supplierModal" class="modal">
+    <h3>Add New Supplier</h3>
+    <input type="text" id="supplierName" placeholder="Supplier Name" required>
+    <input type="text" id="supplierContact" placeholder="Contact" required>
+    <input type="email" id="supplierEmail" placeholder="Email" required>
+    <input type="text" id="supplierAddress" placeholder="Address" required>
+    
+    <button onclick="addSupplier()">Save Supplier</button>
+    <button onclick="closeSupplierModal()">Cancel</button>
+  </div>
+
+  <script>
+    const productApiUrl = 'http://localhost:5000/api/products';
+    const supplierApiUrl = 'http://localhost:5000/api/suppliers';
+
+    async function fetchSuppliers() {
+      try {
+        const response = await fetch(supplierApiUrl);
+        const suppliers = await response.json();
+        const supplierDropdown = document.getElementById('supplier');
+        supplierDropdown.innerHTML = '<option value="">Select Supplier</option>';
+        suppliers.forEach(supplier => {
+          let option = document.createElement('option');
+          option.value = supplier._id;
+          option.textContent = `${supplier.name} (${supplier.contact})`;
+          supplierDropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error fetching suppliers:", error);
+      }
+    }
+
+    async function fetchProducts() {
+      try {
+        const response = await fetch(productApiUrl);
+        const products = await response.json();
+        const productTable = document.querySelector('#product-table tbody');
+        productTable.innerHTML = '';
+
+        products.forEach(product => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.price}</td>
+            <td>${product.stock}</td>
+            <td>${product.supplier ? product.supplier.name : 'N/A'}</td>
+            <td class="action-buttons">
+              <button class="update" onclick="updateProduct('${product._id}')">Update</button>
+              <button class="delete" onclick="deleteProduct('${product._id}')">Delete</button>
+            </td>
+          `;
+          productTable.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    }
+    function openSupplierModal() {
+  document.getElementById("supplierModal").classList.add("show");
+}
+
+function closeSupplierModal() {
+  document.getElementById("supplierModal").classList.remove("show");
+}
+
+async function addSupplier() {
+  const name = document.getElementById("supplierName").value.trim();
+  const contact = document.getElementById("supplierContact").value.trim();
+  const email = document.getElementById("supplierEmail").value.trim();
+  const address = document.getElementById("supplierAddress").value.trim();
+
+  if (!name || !contact || !email || !address) {
+    alert("Please fill in all supplier details.");
+    return;
+  }
+
+  const supplierData = { name, contact, email, address };
+
+  try {
+    const response = await fetch(supplierApiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(supplierData),
+    });
+
+    if (response.ok) {
+      closeSupplierModal();
+      fetchSuppliers(); // Refresh the dropdown with the new supplier
+    } else {
+      alert("Failed to add supplier.");
+    }
+  } catch (error) {
+    console.error("Error adding supplier:", error);
+  }
+}
+
+async function createProduct() {
+    const name = document.getElementById('name');
+    const price = document.getElementById('price');
+    const stock = document.getElementById('stock');
+    const supplier = document.getElementById('supplier');
+
+    const productData = { 
+        name: name.value.trim(), 
+        price: parseFloat(price.value), 
+        stock: parseInt(stock.value, 10), 
+        supplier: supplier.value 
+    };
+
+    if (!productData.name || isNaN(productData.price) || productData.price < 0 || isNaN(productData.stock) || productData.stock < 0 || !productData.supplier) {
+        alert("Please enter valid product details.");
+        return;
+    }
+
+    try {
+        await fetch(productApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData),
+        });
+
+        fetchProducts(); // Refresh the product list
+
+        // ✅ Clear input fields after successful product addition
+        name.value = "";
+        price.value = "";
+        stock.value = "";
+        supplier.value = ""; // Reset dropdown selection
+    } catch (error) {
+        console.error("Error adding product:", error);
+    }
+}
+
+
+    async function updateProduct(productId) {
+    try {
+        // Fetch product details
+        const productResponse = await fetch(`${productApiUrl}/${productId}`);
+        const product = await productResponse.json();
+
+        // Fetch suppliers
+        const supplierResponse = await fetch(supplierApiUrl);
+        const suppliers = await supplierResponse.json();
+
+        // Create a dropdown for selecting supplier
+        let supplierOptions = suppliers.map(supplier => `
+            <option value="${supplier._id}" ${supplier._id === product.supplier._id ? 'selected' : ''}>
+                ${supplier.name}
+            </option>
+        `).join("");
+
+        // Create a modal-like input prompt using HTML
+        const updateForm = `
+            <div>
+                <label>Product Name:</label>
+                <input type="text" id="updateName" value="${product.name}">
+                <label>Product Price:</label>
+                <input type="number" id="updatePrice" value="${product.price}">
+                <label>Product Stock:</label>
+                <input type="number" id="updateStock" value="${product.stock}">
+                <label>Supplier:</label>
+                <select id="updateSupplier">${supplierOptions}</select>
+                <button onclick="submitUpdate('${productId}')">Save Changes</button>
+                <button onclick="document.getElementById('updateModal').remove()">Cancel</button>
+            </div>
+        `;
+
+        // Show the update form in a modal-like div
+        let modal = document.createElement("div");
+        modal.id = "updateModal";
+        modal.className = "modal show";
+        modal.innerHTML = updateForm;
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error("Error updating product:", error);
+    }
+}
+async function submitUpdate(productId) {
+    const updatedName = document.getElementById("updateName").value.trim();
+    const updatedPrice = parseFloat(document.getElementById("updatePrice").value);
+    const updatedStock = parseInt(document.getElementById("updateStock").value, 10);
+    const updatedSupplier = document.getElementById("updateSupplier").value;
+
+    if (!updatedName || isNaN(updatedPrice) || isNaN(updatedStock) || !updatedSupplier) {
+        alert("Please enter valid details.");
+        return;
+    }
+
+    const updatedProductData = {
+        name: updatedName,
+        price: updatedPrice,
+        stock: updatedStock,
+        supplier: updatedSupplier  // ✅ Sending supplier ID
+    };
+
+    try {
+        await fetch(`${productApiUrl}/${productId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedProductData),
+        });
+
+        alert("Product updated successfully!");
+        document.getElementById("updateModal").remove(); // Close modal
+        fetchProducts(); // Refresh product list
+    } catch (error) {
+        console.error("Error updating product:", error);
+    }
+}
+
+
+
+    async function deleteProduct(id) {
+      if (confirm("Are you sure you want to delete this product?")) {
+        await fetch(`${productApiUrl}/${id}`, { method: 'DELETE' });
+        fetchProducts();
+      }
+    }
+
+    window.onload = () => {
+      fetchProducts();
+      fetchSuppliers();
+    };
+  </script>
+
+</body>
+</html>

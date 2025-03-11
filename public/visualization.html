@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock Visualization</title>
+  
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 26px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 15px;
+    }
+    .container {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 750px;
+      margin: auto;
+    }
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      outline: none;
+      background: #fff;
+      color: #333;
+      width: 100%;
+      max-width: 300px;
+    }
+    .btn {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 500;
+      margin: 10px 5px;
+      width: 150px;
+    }
+    #refresh-btn {
+      background-color: #007bff;
+      color: white;
+    }
+    #refresh-btn:hover {
+      background-color: #0056b3;
+    }
+    #back-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+    #back-btn:hover {
+      background-color: #495057;
+    }
+  </style>
+</head>
+<body>
+  <!-- Optional header for consistency -->
+  <header>
+    <h2>Product Stock Visualization</h2>
+  </header>
+
+  <div class="container">
+    <div class="form-group">
+      <label for="chart-type"><strong>Select Chart Type:</strong></label>
+      <select id="chart-type">
+        <option value="bar">Bar Chart</option>
+        <option value="line">Line Chart</option>
+        <option value="pie">Pie Chart</option>
+      </select>
+    </div>
+
+    <canvas id="stockChart"></canvas>
+
+    <div>
+      <button id="refresh-btn" class="btn">Refresh Chart</button>
+      <button id="back-btn" class="btn">Go Back</button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "http://localhost:5000/api/products";
+
+    // Redirect "Go Back" button to a desired page (update URL accordingly)
+    document.getElementById("back-btn").addEventListener("click", () => {
+      window.location.href = "index1.html"; 
+    });
+
+    document.getElementById("refresh-btn").addEventListener("click", fetchStockData);
+    document.getElementById("chart-type").addEventListener("change", fetchStockData);
+
+    let stockChart;
+    async function fetchStockData() {
+      const chartType = document.getElementById("chart-type").value;
+      try {
+        const response = await fetch(API_BASE_URL);
+        if (!response.ok) throw new Error("Error fetching product data.");
+        const products = await response.json();
+
+        if (!products.length) {
+          alert("No products available to display.");
+          return;
+        }
+
+        const labels = products.map(p => p.name);
+        const stockData = products.map(p => p.stock);
+        updateChart(chartType, labels, stockData);
+      } catch (error) {
+        alert(error.message);
+        console.error("Error:", error);
+      }
+    }
+
+    function updateChart(type, labels, data) {
+      const ctx = document.getElementById('stockChart').getContext('2d');
+
+      if (stockChart) {
+        stockChart.destroy();
+      }
+
+      const chartConfig = {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Stock Quantity',
+            data: data,
+            backgroundColor: type === 'pie' 
+              ? ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
+              : ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'],
+            borderColor: type === 'line' ? '#222' : 'white',
+            borderWidth: 2,
+            tension: 0.3,
+            pointBackgroundColor: '#222',
+            pointBorderColor: '#222',
+            pointRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          animation: {
+            duration: 800,
+            easing: 'easeOutQuart'
+          },
+          plugins: {
+            legend: { display: true, labels: { color: '#333' } },
+            tooltip: {
+              backgroundColor: 'white',
+              titleColor: 'black',
+              bodyColor: 'black',
+              borderColor: '#ccc',
+              borderWidth: 1,
+              titleFont: { weight: 'bold' }
+            }
+          },
+          scales: type !== 'pie'
+            ? { 
+                x: { ticks: { color: '#333' } }, 
+                y: { beginAtZero: true, ticks: { color: '#333' } }
+              }
+            : {}
+        }
+      };
+
+      stockChart = new Chart(ctx, chartConfig);
+    }
+
+    // Initial chart load
+    fetchStockData();
+  </script>
+</body>
+</html>
