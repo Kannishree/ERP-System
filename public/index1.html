@@ -60,7 +60,6 @@
         .content {
             margin-left: 260px;
             padding: 20px;
-            min-height: 100vh;
         }
 
         /* Profile Section */
@@ -202,7 +201,7 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <h4 class="text-center">InvyTech</h4>
+        <h4 class="text-center">SmartERP</h4>
         <a href="index1.html"><i class="fas fa-home"></i> <span>Dashboard</span></a>
         <a href="product.html"><i class="fas fa-box"></i> <span>Products</span></a>
         <a href="visualization.html"><i class="fas fa-chart-bar"></i> <span>Visualization</span></a>
@@ -222,7 +221,7 @@
 
     <!-- Dashboard Content -->
     <div class="content" id="dashboard-content">
-        <h2>Welcome to InvyTech</h2>
+        <h2>Welcome to SmartERP</h2>
         <div class="row mt-4">
             <div class="col-md-4">
                 <a href="visualization.html" class="card-link">
@@ -274,42 +273,35 @@
 
     <script>
         async function getChatbotResponse(message) {
-    message = message.toLowerCase().trim();
-
-    // Check for supplier inquiries FIRST
-    if (message.includes("supplier details") || message.includes("available suppliers")) {
-        return await fetchSupplierDetails("");
-    }
-
-    if (message.startsWith("tell me about supplier")) {
-        let supplierName = message.replace("tell me about supplier", "").trim();
-        return await fetchSupplierDetails(supplierName);
-    }
-
-    // Then check for product-related inquiries
-    if (message.includes("what are the products available") || message.includes("available products")) {
-        return await fetchProductDetails(""); // Fetch all products
-    }
-
-    if (message.startsWith("tell me about")) {
-        let productName = message.replace("tell me about", "").trim();
-        return await fetchProductDetails(productName);
-    }
-
-    // Handle other queries
-    if (message.includes("order")) return "📦 Check the 'Orders' section to view customer orders.";
-    if (message.includes("stock")) return "📊 Stock analytics are available in the 'Visualization' section.";
-    if (message.includes("dashboard")) return "📌 You are currently on the dashboard. Use the sidebar to navigate.";
-    if (message.includes("logout")) return "🔒 Click on 'Logout' in the sidebar to log out.";
-    if (message.includes("help")) return "ℹ You can ask about products, suppliers, orders, stock, or how to log out.";
-    if (message.includes("hello") || message.includes("hi")) return "👋 Hello! How can I assist you today?";
-    if (message.includes("product") || message.includes("products")) return "📦 Check the 'Products' module for available items.";
-    if (message.includes("supplier") || message.includes("suppliers")) return "📜 Check the 'Suppliers' module for supplier details.";
-    if (message.includes("thank you") || message.includes("thanks")) return "😊 You're welcome! Let me know if you need more help.";
-
-    return "🤖 I'm still learning! Try asking about a specific product or supplier.";
-}
-
+            message = message.toLowerCase().trim();
+            
+            // Check for general product inquiries
+            if (message.includes("what are the products available") || message.includes("available products")) {
+                return await fetchProductDetails(""); // Fetch all products
+            }
+            // Identify product inquiries
+            if (message.includes("product details") || message.includes("tell me about")) {
+                let productName = message.replace("product details", "").replace("tell me about", "").trim();
+                return await fetchProductDetails(productName);
+            }
+    
+            // Identify supplier inquiries
+            if (message.includes("supplier details") || message.includes("who supplies")) {
+                let supplierName = message.replace("supplier details", "").replace("who supplies", "").trim();
+                return await fetchSupplierDetails(supplierName);
+            }
+    
+            // Handle other queries
+            if (message.includes("order")) return "📦 Check the 'Orders' section to view customer orders.";
+            if (message.includes("stock")) return "📊 Stock analytics are available in the 'Visualization' section.";
+            if (message.includes("dashboard")) return "📌 You are currently on the dashboard. Use the sidebar to navigate.";
+            if (message.includes("logout")) return "🔒 Click on 'Logout' in the sidebar to log out.";
+            if (message.includes("help")) return "ℹ️ You can ask about products, suppliers, orders, stock, or how to log out.";
+            if (message.includes("hello") || message.includes("hi")) return "👋 Hello! How can I assist you today?";
+            if (message.includes("thank you") || message.includes("thanks")) return "😊 You're welcome! Let me know if you need more help.";
+    
+            return "🤖 I'm still learning! Try asking about a specific product or supplier.";
+        }
     
         // Function to fetch product details along with supplier information
         async function fetchProductDetails(productName) {
@@ -318,38 +310,33 @@
         let data = await response.json();
 
         if (!data.length) {
-            return "⚠ No products found in the database.";
+            return "⚠️ No products found in the database.";
         }
 
         if (productName) {
             let product = data.find(p => p.name.toLowerCase() === productName.toLowerCase());
 
             if (!product) {
-                return ⚠ Product '${productName}' not found.;
+                return `⚠️ Product '${productName}' not found.`;
             }
 
             console.log("Fetched Product Data:", product); // Debugging
-          
-            console.log("Supplier Field:", product.supplier);
 
+            // Ensure supplier ID is available
             let supplierInfo = "❌ Not available";
-if (product.supplier && typeof product.supplier === "string") {
-    supplierInfo = await fetchSupplierById(product.supplier);
-} else if (product.supplier && typeof product.supplier === "object") {
-    // If supplier details are already available, use them directly
-    supplierInfo = ${product.supplier.name} (📍 ${product.supplier.address}, 📞 ${product.supplier.contact}, ✉ ${product.supplier.email});
-}
+            if (product.supplier) {
+                supplierInfo = await fetchSupplierById(product.supplier);
+            }
 
-
-            return `🛒 Product: ${product.name}
-💰 Price: $${product.price}
-📦 Stock: ${product.stock} units
-🏢 Supplier: ${supplierInfo}`;
+            return `🛒 **Product:** ${product.name}
+💰 **Price:** $${product.price}
+📦 **Stock:** ${product.stock} units
+🏢 **Supplier:** ${supplierInfo}`;
         }
 
-        return data.map(product => `🛒 Product: ${product.name}
-💰 Price: $${product.price}
-📦 Stock:${product.stock} units`).join("\n\n");
+        return data.map(product => `🛒 **Product:** ${product.name}
+💰 **Price:** $${product.price}
+📦 **Stock:** ${product.stock} units`).join("\n\n");
 
     } catch (error) {
         console.error("Error fetching product details:", error);
@@ -357,64 +344,55 @@ if (product.supplier && typeof product.supplier === "string") {
     }
 }
 
-async function fetchSupplierDetails(supplierName) {
+// ✅ Function to fetch supplier details using supplier ID
+async function fetchSupplierById(supplierId) {
     try {
-        let response = await fetch("https://erp-system-3k45.onrender.com/api/suppliers");
+        let response = await fetch(`https://erp-system-3k45.onrender.com/api/suppliers/${supplierId}`);
+        let supplier = await response.json();
 
-        if (!response.ok) {
-            throw new Error(HTTP error! Status: ${response.status});
+        console.log("Fetched Supplier Data:", supplier); // Debugging
+
+        if (!supplier || !supplier.name) {
+            return "❌ Supplier details not found";
         }
 
-        let data = await response.json();
-
-        // Check if the API response is an array
-        let suppliers = Array.isArray(data) ? data : data.suppliers;
-
-        if (!suppliers || suppliers.length === 0) {
-            return "❌ No suppliers available.";
-        }
-
-        // If looking for a specific supplier
-        if (supplierName) {
-            let supplier = suppliers.find(s => 
-                s.name.toLowerCase().trim() === supplierName.toLowerCase().trim()
-            );
-
-            if (!supplier) {
-                return ⚠ Supplier '${supplierName}' not found.;
-            }
-
-            return `🏢 Supplier: ${supplier.name}
-📍 Location: ${supplier.address || "Not provided"}
-📞 Contact: ${supplier.contact || "Not available"}
-✉ Email: ${supplier.email || "Not provided"}`;
-        }
-
-        // If fetching all suppliers
-        return suppliers.map(supplier => 
-            `🏢 Supplier: ${supplier.name}
-📍 Location: ${supplier.address || "Not provided"}
-📞 Contact: ${supplier.contact || "Not available"}
-✉ Email: ${supplier.email || "Not provided"}`
-        ).join("\n\n");
-
+        return `${supplier.name} (📍 ${supplier.address}, 📞 ${supplier.contact}, ✉️ ${supplier.email})`;
     } catch (error) {
         console.error("Error fetching supplier details:", error);
-        return "⚠ Error fetching supplier details. Please try again later.";
+        return "❌ Supplier details unavailable";
     }
 }
-
-
-        
-function displayMessage(sender, message) {
-    const chatbotMessages = document.getElementById("chatbot-messages");
-    const messageElement = document.createElement("div");
-    messageElement.classList.add("chatbot-message", sender === "user" ? "user" : "bot");
-    messageElement.textContent = message;
-    chatbotMessages.appendChild(messageElement);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight; // Auto-scroll to the latest message
-}
-
+    
+        async function fetchSupplierDetails(supplierName) {
+            if (!supplierName) return "❓ Please specify a supplier name.";
+    
+            try {
+                let response = await fetch(`https://erp-system-3k45.onrender.com/api/suppliers?name=${encodeURIComponent(supplierName)}`);
+                let data = await response.json();
+    
+                if (data.length > 0) {
+                    let supplier = data[0]; // Assume the first result is the correct one
+                    return `🏢 **Supplier:** ${supplier.name}
+    📍 **Location:** ${supplier.location}
+    📞 **Contact:** ${supplier.contact}`;
+                } else {
+                    return "⚠️ Supplier not found. Please check the name and try again.";
+                }
+            } catch (error) {
+                return "❌ Error fetching supplier details. Please try again later.";
+            }
+        }
+    
+        async function fetchSupplierById(supplierId) {
+            try {
+                let response = await fetch(`https://erp-system-3k45.onrender.com/api/suppliers/${supplierId}`);
+                let supplier = await response.json();
+                return `${supplier.name} (📍 ${supplier.location})`;
+            } catch (error) {
+                return "Unknown Supplier";
+            }
+        }
+    
         async function sendMessage() {
             let inputField = document.getElementById("chatbot-input");
             let message = inputField.value.trim();
@@ -449,17 +427,16 @@ function displayMessage(sender, message) {
         function checkLogin() {
             let user = localStorage.getItem("user");
             if (user) {
-            document.getElementById("dashboard-content").style.display = "block";
-            document.getElementById("sidebar").style.display = "block";
-            document.getElementById("navbar").style.display = "block";
-
-            let userData = JSON.parse(user);
-            document.getElementById("username").innerText = userData.username || "User";
+                document.getElementById("dashboard-content").style.display = "block";
+                document.getElementById("sidebar").style.display = "block";
+                document.getElementById("navbar").style.display = "block";
+    
+                let userData = JSON.parse(user);
+                document.getElementById("username").innerText = userData.username || "User";
             } else {
-            window.location.href = "login.html";
+                window.location.href = "login.html";
+            }
         }
-    }
-
     
         function logout() {
             localStorage.removeItem("user");
