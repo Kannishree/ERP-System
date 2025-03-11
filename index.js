@@ -36,6 +36,9 @@ app.get('/', (req, res) => {
 // ✅ Serve Register & Login Pages
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
+app.get('/api', (req, res) => {
+    res.json({ message: 'ERP API is working!' });
+});
 
 // ✅ API Routes
 app.use('/api/auth', authRoutes);
